@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>JustCheck</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Gloria+Hallelujah:wght@400&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #fdfdfc; }
+  * { box-sizing: border-box; }
+  a { color: #3b82f6; text-decoration: none; }
+  a:hover { color: #1d4ed8; }
+  input, button, textarea { font-family: inherit; }
+  input:focus, textarea:focus { outline: none; }
+  ::placeholder { color: #c9c9c4; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="manifest" href="./manifest.webmanifest" />
+<meta name="theme-color" content="#fdfdfc" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<script>
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
+  }
+</script>
+</helmet>
+<div style="min-height: 100vh; font-family: 'Architects Daughter', cursive; color: #1c1c1a;">
+
+  <sc-if value="{{ isCalendar }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width: 1100px; margin: 0 auto; padding: 56px 40px 96px; display: flex; flex-direction: column; gap: 36px;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 28px;">
+        <button onClick="{{ prevMonth }}" aria-label="mês anterior" style="border: 2.5px solid #1c1c1a; background: #fff; border-radius: 12px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); width: 46px; height: 46px; font-size: 24px; line-height: 1; cursor: pointer; color: #1c1c1a;" style-hover="background: #eff6ff; border-color: #3b82f6;">‹</button>
+        <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 30px; min-width: 300px; text-align: center;">{{ monthLabel }}</div>
+        <button onClick="{{ nextMonth }}" aria-label="próximo mês" style="border: 2.5px solid #1c1c1a; background: #fff; border-radius: 12px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); width: 46px; height: 46px; font-size: 24px; line-height: 1; cursor: pointer; color: #1c1c1a;" style-hover="background: #eff6ff; border-color: #3b82f6;">›</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px 12px;">
+        <sc-for list="{{ weekdays }}" as="wd" hint-placeholder-count="7">
+          <div style="text-align: center; font-size: 18px; color: #9a9a92; padding-bottom: 4px;">{{ wd }}</div>
+        </sc-for>
+        <sc-for list="{{ days }}" as="day" hint-placeholder-count="35">
+          <div style="display: flex; align-items: center; justify-content: center; padding: 2px 0;">{{ day.el }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDay }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 40px 48px 96px; max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+      <button onClick="{{ back }}" style="align-self: flex-start; display: flex; align-items: center; gap: 12px; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 12px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 9px 18px; font-size: 20px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;">
+        <span style="font-size: 22px; line-height: 1;">‹</span>
+        <span>{{ dayLabel }}</span>
+      </button>
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 56px;">
+        <div style="flex: 1 1 620px; min-width: 280px; display: flex; flex-direction: column; gap: 14px;">
+          <sc-for list="{{ items }}" as="item" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: 20px; padding: 4px 2px;">
+              <button onClick="{{ item.toggle }}" aria-label="marcar" style="{{ item.boxStyle }}"><span style="{{ item.checkStyle }}">✓</span></button>
+              <textarea rows="1" value="{{ item.text }}" onChange="{{ item.onText }}" onKeyDown="{{ item.onKey }}" placeholder="Escreva aqui…" style="{{ item.textStyle }}"></textarea>
+              <button onClick="{{ item.remove }}" aria-label="remover" style="border: none; background: transparent; color: #d8d8d2; font-size: 26px; line-height: 1; cursor: pointer; padding: 4px 10px; border-radius: 8px;" style-hover="color: #ef4444;">×</button>
+            </div>
+          </sc-for>
+
+          <button onClick="{{ addItem }}" style="align-self: flex-start; margin-top: 10px; display: flex; align-items: center; gap: 16px; border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 14px; padding: 14px 26px 14px 18px; font-size: 21px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #93c5fd; color: #3b82f6;">
+            <span style="font-size: 28px; line-height: 1;">+</span>
+            <span>Novo item</span>
+          </button>
+        </div>
+
+        <div style="flex: 0 1 auto; display: flex; justify-content: center; margin: 0 auto;">{{ ring }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position: fixed; top: 20px; right: 24px; display: flex; align-items: center; gap: 10px;">
+    <span style="font-size: 16px; color: #9a9a92;">{{ cardHint }}</span>
+    <button onClick="{{ cardAction }}" title="{{ cardTitle }}" style="display: flex; align-items: center; gap: 10px; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 999px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 8px 18px 8px 14px; font-family: 'Architects Daughter', cursive; font-size: 17px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;">
+      <span style="font-size: 17px;">🗂</span>
+      <span>{{ cardLabel }}</span>
+    </button>
+    <sc-if value="{{ cardLinked }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ unlinkCard }}" title="desvincular" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 999px; width: 36px; height: 36px; font-size: 18px; line-height: 1; color: #9a9a92; cursor: pointer;" style-hover="border-color: #ef4444; color: #ef4444;">×</button>
+    </sc-if>
+  </div>
+
+  <button onClick="{{ openCoffee }}" style="position: fixed; bottom: 22px; right: 24px; display: flex; align-items: center; gap: 10px; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 999px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 9px 20px 9px 16px; font-family: 'Architects Daughter', cursive; font-size: 18px; color: #1c1c1a; cursor: pointer;" style-hover="background: #fff8e6; border-color: #d9a53b; color: #8a5a10;">
+    <span style="font-size: 19px;">☕</span>
+    <span>Pay my coffee</span>
+  </button>
+
+  <sc-if value="{{ coffeeOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCoffee }}" style="position: fixed; inset: 0; background: rgba(28,28,26,.28); display: flex; align-items: center; justify-content: center; padding: 24px;">
+      <div onClick="{{ stop }}" style="background: #fff; border: 3px solid #1c1c1a; border-radius: 22px; box-shadow: 5px 7px 0 rgba(28,28,26,.16); padding: 30px 34px 26px; max-width: 400px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+        <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 24px; text-align: center;">Me paga um café ☕</div>
+        <div style="font-size: 18px; color: #7d7d76; text-align: center; margin-top: -8px;">Pix — aponte a câmera do banco</div>
+        <div style="padding: 12px; border: 2.5px solid #1c1c1a; border-radius: 16px;">{{ qr }}</div>
+        <div style="font-size: 15px; color: #7d7d76; word-break: break-all; text-align: center; line-height: 1.4; max-height: 62px; overflow: hidden;">{{ pixPayload }}</div>
+        <div style="display: flex; gap: 12px; width: 100%;">
+          <button onClick="{{ copyPix }}" style="flex: 1 1 auto; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 12px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 10px 16px; font-size: 18px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;">{{ copyLabel }}</button>
+          <button onClick="{{ closeCoffee }}" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 10px 16px; font-size: 18px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #1c1c1a; color: #1c1c1a;">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;pixKey&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;seu-email@exemplo.com&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pix&quot;},&quot;pixName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;CAFE&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pix&quot;},&quot;pixCity&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;SAO PAULO&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pix&quot;},&quot;pixAmount&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Pix&quot;}}">
+const KEY = 'whiteboard-checklist-v2';
+const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const pad = n => String(n).padStart(2, '0');
+const keyOf = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+
+const SEED = [
+  { id: 1, text: 'Limitar histórico para o cliente', done: false },
+  { id: 2, text: 'Visual de PDF do log, cada etapa com rubrica de quem fez', done: false },
+  { id: 3, text: 'Bug do IFRAME e ajustes visuais', done: true },
+  { id: 4, text: 'Comportamento dos campos obrigatórios no EMBED', done: true },
+  { id: 5, text: 'Correção na Embed Route', done: true }
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const now = new Date();
+    const today = keyOf(now);
+    const data = {};
+    data[today] = SEED;
+    this.state = { view: 'calendar', day: today, y: now.getFullYear(), m: now.getMonth(), data };
+  }
+
+  componentDidMount() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.data) this.setState({ data: d.data });
+      }
+    } catch (e) {}
+    setTimeout(() => this.autosize(), 60);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.autosize());
+    window.addEventListener('resize', this._rs = () => this.autosize());
+    this.initCard();
+  }
+
+  componentWillUnmount() { window.removeEventListener('resize', this._rs); }
+  componentDidUpdate() { this.autosize(); }
+
+  autosize() {
+    document.querySelectorAll('textarea').forEach(t => {
+      t.style.height = 'auto';
+      t.style.height = t.scrollHeight + 'px';
+    });
+  }
+
+  saveData(items) {
+    this.setState(s => ({ data: Object.assign({}, s.data, { [s.day]: items }) }), () => {
+      try { localStorage.setItem(KEY, JSON.stringify({ data: this.state.data })); } catch (e) {}
+      this.writeCard();
+    });
+  }
+
+  itemsFor(k) { return this.state.data[k] || []; }
+
+  add(afterId) {
+    const items = this.itemsFor(this.state.day).slice();
+    const item = { id: Date.now() + Math.random(), text: '', done: false };
+    const i = afterId == null ? items.length : items.findIndex(x => x.id === afterId) + 1;
+    items.splice(i, 0, item);
+    this.saveData(items);
+    setTimeout(() => {
+      const t = document.querySelectorAll('textarea');
+      if (t[i]) t[i].focus();
+    }, 40);
+  }
+
+  ringEl(done, total, opts) {
+    const o = opts || {};
+    const size = o.size || 300, stroke = o.stroke || 22;
+    const complete = total > 0 && done === total;
+    const r = (size - stroke) / 2 - (o.pad || 5), c = 2 * Math.PI * r;
+    const pct = total ? done / total : 0;
+    const h = React.createElement;
+    return h('div', { style: { position: 'relative', width: size, height: size } },
+      h('svg', { width: size, height: size, style: { display: 'block', transform: 'rotate(-90deg)' } },
+        h('circle', { cx: size / 2, cy: size / 2, r, fill: 'none', stroke: '#efefe9', strokeWidth: stroke }),
+        total ? h('circle', {
+          cx: size / 2, cy: size / 2, r, fill: 'none', stroke: complete ? '#5fd08a' : '#93c5fd', strokeWidth: stroke,
+          strokeLinecap: 'round', strokeDasharray: c, strokeDashoffset: c * (1 - pct),
+          style: { transition: 'stroke-dashoffset .5s cubic-bezier(.4,0,.2,1)' }
+        }) : null,
+        h('circle', { cx: size / 2, cy: size / 2, r: r + stroke / 2, fill: 'none', stroke: '#1c1c1a', strokeWidth: o.hair || 2.5, opacity: 0.85 }),
+        h('circle', { cx: size / 2, cy: size / 2, r: r - stroke / 2, fill: 'none', stroke: '#1c1c1a', strokeWidth: o.hair || 2.5, opacity: 0.85 })
+      ),
+      h('div', { style: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: o.gap != null ? o.gap : 2 } },
+        h('div', { style: { fontFamily: "'Gloria Hallelujah', cursive", fontSize: o.big || 68, lineHeight: 1, letterSpacing: '-1px', color: o.mutedBig ? '#b6b6ae' : '#1c1c1a' } }, o.bigText),
+        o.smallText ? h('div', { style: { fontFamily: "'Architects Daughter', cursive", fontSize: o.small || 20, lineHeight: 1.1, color: '#7d7d76' } }, o.smallText) : null
+      )
+    );
+  }
+
+  dayCell(dateKey, num, isToday) {
+    const items = this.itemsFor(dateKey);
+    const done = items.filter(i => i.done).length;
+    const h = React.createElement;
+    return h('button', {
+      onClick: () => this.setState({ view: 'day', day: dateKey }),
+      title: items.length ? done + '/' + items.length : 'sem itens',
+      style: {
+        border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
+        borderRadius: '50%', display: 'block', fontSize: 0,
+        boxShadow: isToday ? '0 0 0 3px #93c5fd' : 'none'
+      }
+    }, this.ringEl(done, items.length, {
+      size: 84, stroke: 9, pad: 2, hair: 1.6, big: 22, small: 12, gap: 2,
+      bigText: String(num), mutedBig: !items.length,
+      smallText: items.length ? done + '/' + items.length : ''
+    }));
+  }
+
+  // ---- "memory card": arquivo local vinculado (File System Access API) ----
+  idb() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('wb-card', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('h');
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+
+  async idbGet() {
+    try {
+      const db = await this.idb();
+      return await new Promise(res => {
+        const q = db.transaction('h').objectStore('h').get('file');
+        q.onsuccess = () => res(q.result || null);
+        q.onerror = () => res(null);
+      });
+    } catch (e) { return null; }
+  }
+
+  async idbSet(v) {
+    try {
+      const db = await this.idb();
+      const tx = db.transaction('h', 'readwrite');
+      v ? tx.objectStore('h').put(v, 'file') : tx.objectStore('h').delete('file');
+    } catch (e) {}
+  }
+
+  async initCard() {
+    if (!window.showSaveFilePicker) { this.setState({ card: 'unsupported' }); return; }
+    const h = await this.idbGet();
+    if (!h) { this.setState({ card: 'none' }); return; }
+    this._handle = h;
+    const perm = await h.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') { this.setState({ card: 'linked', cardName: h.name }); this.readCard(); }
+    else this.setState({ card: 'locked', cardName: h.name });
+  }
+
+  async readCard() {
+    try {
+      const file = await this._handle.getFile();
+      const txt = await file.text();
+      if (txt.trim()) {
+        const d = JSON.parse(txt);
+        if (d && d.data) { this.setState({ data: d.data }); return; }
+      }
+      this.writeCard();
+    } catch (e) { console.warn(e); }
+  }
+
+  writeCard() {
+    if (!this._handle || this.state.card === 'locked') return;
+    clearTimeout(this._wt);
+    this._wt = setTimeout(async () => {
+      try {
+        const w = await this._handle.createWritable();
+        await w.write(JSON.stringify({ data: this.state.data }, null, 2));
+        await w.close();
+        this.setState({ saved: Date.now() });
+      } catch (e) { console.warn(e); }
+    }, 500);
+  }
+
+  async cardClick() {
+    const st = this.state.card;
+    if (st === 'unsupported') { this.exportJson(); return; }
+    if (st === 'locked') {
+      const p = await this._handle.requestPermission({ mode: 'readwrite' });
+      if (p === 'granted') { this.setState({ card: 'linked' }); this.readCard(); }
+      return;
+    }
+    if (st === 'linked') { this.writeCard(); return; }
+    try {
+      const h = await window.showSaveFilePicker({
+        suggestedName: 'checklist.json',
+        types: [{ description: 'Checklist', accept: { 'application/json': ['.json'] } }]
+      });
+      this._handle = h;
+      await this.idbSet(h);
+      this.setState({ card: 'linked', cardName: h.name }, () => this.readCard());
+    } catch (e) {}
+  }
+
+  async unlinkCard() {
+    this._handle = null;
+    await this.idbSet(null);
+    this.setState({ card: 'none', cardName: '' });
+  }
+
+  exportJson() {
+    const url = URL.createObjectURL(new Blob([JSON.stringify({ data: this.state.data }, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'checklist.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+
+  pixCode() {
+    const key = (this.props.pixKey || 'seu-email@exemplo.com').trim();
+    const name = (this.props.pixName || 'CAFE').toUpperCase().slice(0, 25);
+    const city = (this.props.pixCity || 'SAO PAULO').toUpperCase().slice(0, 15);
+    const amount = Number(this.props.pixAmount || 0);
+    const f = (id, v) => id + String(v.length).padStart(2, '0') + v;
+    const gui = f('00', 'BR.GOV.BCB.PIX') + f('01', key);
+    let p = f('00', '01') + f('26', gui) + f('52', '0000') + f('53', '986');
+    if (amount > 0) p += f('54', amount.toFixed(2));
+    p += f('58', 'BR') + f('59', name) + f('60', city) + f('62', f('05', '***')) + '6304';
+    let crc = 0xFFFF;
+    for (let i = 0; i < p.length; i++) {
+      crc ^= p.charCodeAt(i) << 8;
+      for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+    }
+    return p + crc.toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  qrEl(payload) {
+    const h = React.createElement;
+    const gen = window.qrcode;
+    if (!gen) return h('div', { style: { width: 220, height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9a9a92', fontSize: 16 } }, 'gerando QR…');
+    let qr;
+    for (const type of [0]) { qr = gen(type, 'M'); qr.addData(payload); qr.make(); }
+    const n = qr.getModuleCount(), size = 220, cell = size / n, rects = [];
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (qr.isDark(r, c)) rects.push(h('rect', {
+          key: r + '-' + c, x: c * cell, y: r * cell,
+          width: cell + 0.4, height: cell + 0.4, rx: cell * 0.28, fill: '#1c1c1a'
+        }));
+      }
+    }
+    return h('svg', { width: size, height: size, viewBox: '0 0 ' + size + ' ' + size, style: { display: 'block' } }, rects);
+  }
+
+  renderVals() {
+    const { view, y, m, day } = this.state;
+    const first = new Date(y, m, 1);
+    const offset = first.getDay();
+    const total = new Date(y, m + 1, 0).getDate();
+    const todayKey = keyOf(new Date());
+
+    const days = [];
+    for (let i = 0; i < offset; i++) days.push({ el: null });
+    for (let n = 1; n <= total; n++) {
+      const k = y + '-' + pad(m + 1) + '-' + pad(n);
+      days.push({ el: this.dayCell(k, n, k === todayKey) });
+    }
+
+    const items = this.itemsFor(day);
+    const done = items.filter(i => i.done).length;
+    const parts = day.split('-');
+    const dayLabel = parts[2] + ' de ' + MONTHS[Number(parts[1]) - 1];
+    const pix = this.pixCode();
+    const card = this.state.card || 'none';
+
+    return {
+      cardLabel: card === 'linked' ? (this.state.cardName || 'checklist.json')
+        : card === 'locked' ? 'Reconectar cartão de memória'
+        : card === 'unsupported' ? 'Baixar backup' : 'Cartão de memória',
+      cardHint: card === 'linked' ? 'salvando no arquivo' : card === 'unsupported' ? 'salvo neste navegador' : '',
+      cardTitle: card === 'unsupported' ? 'Seu navegador não permite gravar em arquivo — baixe um backup JSON' : 'Escolha um arquivo .json como cartão de memória — o app grava nele automaticamente',
+      cardLinked: card === 'linked' || card === 'locked',
+      cardAction: () => this.cardClick(),
+      unlinkCard: () => this.unlinkCard(),
+      coffeeOpen: !!this.state.coffeeOpen,
+      openCoffee: () => this.setState({ coffeeOpen: true, copied: false }),
+      closeCoffee: () => this.setState({ coffeeOpen: false }),
+      stop: e => e.stopPropagation(),
+      pixPayload: pix,
+      qr: this.state.coffeeOpen ? this.qrEl(pix) : null,
+      copyLabel: this.state.copied ? 'Copiado!' : 'Copiar código Pix',
+      copyPix: () => {
+        const done = () => { this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1800); };
+        if (navigator.clipboard) navigator.clipboard.writeText(pix).then(done, done);
+        else done();
+      },
+      isCalendar: view === 'calendar',
+      isDay: view === 'day',
+      monthLabel: MONTHS[m] + ' ' + y,
+      weekdays: ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'],
+      days,
+      prevMonth: () => this.setState(s => ({ y: s.m === 0 ? s.y - 1 : s.y, m: s.m === 0 ? 11 : s.m - 1 })),
+      nextMonth: () => this.setState(s => ({ y: s.m === 11 ? s.y + 1 : s.y, m: s.m === 11 ? 0 : s.m + 1 })),
+      back: () => this.setState({ view: 'calendar' }),
+      dayLabel,
+      ring: this.ringEl(done, items.length, {
+        bigText: done + '/' + items.length,
+        smallText: parts[2] + '/' + parts[1] + '/' + parts[0].slice(2)
+      }),
+      addItem: () => this.add(null),
+      items: items.map(it => ({
+        text: it.text,
+        toggle: () => this.saveData(items.map(x => x.id === it.id ? Object.assign({}, x, { done: !x.done }) : x)),
+        remove: () => this.saveData(items.filter(x => x.id !== it.id)),
+        onText: e => this.saveData(items.map(x => x.id === it.id ? Object.assign({}, x, { text: e.target.value }) : x)),
+        onKey: e => {
+          if (e.key === 'Enter') { e.preventDefault(); this.add(it.id); }
+          if (e.key === 'Backspace' && e.target.value === '') {
+            e.preventDefault();
+            this.saveData(items.filter(x => x.id !== it.id));
+          }
+        },
+        boxStyle: [
+          'width:60px;height:60px;flex:0 0 60px;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center',
+          'border:2.5px solid #1c1c1a;box-shadow:2px 3px 0 rgba(28,28,26,.14)',
+          it.done ? 'background:#5fd08a' : 'background:#fff',
+          'transition:background .18s ease'
+        ].join(';'),
+        checkStyle: [
+          "font-family:'Gloria Hallelujah',cursive;font-size:34px;line-height:1;color:#fff;font-weight:700",
+          it.done ? 'opacity:1;transform:scale(1)' : 'opacity:0;transform:scale(.6)',
+          'transition:all .18s ease'
+        ].join(';'),
+        textStyle: [
+          "flex:1 1 auto;min-width:0;border:none;background:transparent;font-family:'Architects Daughter',cursive;font-size:23px;line-height:1.35;padding:6px 0;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word",
+          it.done ? 'color:#a3a39c;text-decoration:line-through;text-decoration-thickness:2px' : 'color:#1c1c1a'
+        ].join(';')
+      }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

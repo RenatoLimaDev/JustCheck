@@ -20,6 +20,9 @@
   input, button, textarea { font-family: inherit; }
   input:focus, textarea:focus { outline: none; }
   ::placeholder { color: #c9c9c4; }
+  @keyframes mc-spin { from { transform: rotateX(-14deg) rotateY(0deg); } to { transform: rotateX(-14deg) rotateY(360deg); } }
+  @keyframes mc-float { 0%, 100% { transform: translateY(-6px); } 50% { transform: translateY(6px); } }
+  @keyframes mc-shadow { 0%, 100% { transform: scaleX(.92); opacity: .16; } 50% { transform: scaleX(1.04); opacity: .1; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <link rel="manifest" href="./manifest.webmanifest" />
@@ -82,14 +85,56 @@
 
   <div style="position: fixed; top: 20px; right: 24px; display: flex; align-items: center; gap: 10px;">
     <span style="font-size: 16px; color: #9a9a92;">{{ cardHint }}</span>
-    <button onClick="{{ cardAction }}" title="{{ cardTitle }}" style="display: flex; align-items: center; gap: 10px; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 999px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 8px 18px 8px 14px; font-family: 'Architects Daughter', cursive; font-size: 17px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;">
+    <button onClick="{{ openCard }}" title="{{ cardTitle }}" style="display: flex; align-items: center; gap: 10px; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 999px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 8px 18px 8px 14px; font-family: 'Architects Daughter', cursive; font-size: 17px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;">
       <span style="font-size: 17px;">🗂</span>
       <span>{{ cardLabel }}</span>
     </button>
-    <sc-if value="{{ cardLinked }}" hint-placeholder-val="{{ false }}">
-      <button onClick="{{ unlinkCard }}" title="desvincular" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 999px; width: 36px; height: 36px; font-size: 18px; line-height: 1; color: #9a9a92; cursor: pointer;" style-hover="border-color: #ef4444; color: #ef4444;">×</button>
-    </sc-if>
   </div>
+
+  <sc-if value="{{ cardOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCard }}" style="position: fixed; inset: 0; background: rgba(28,28,26,.3); display: flex; align-items: center; justify-content: center; padding: 24px;">
+      <div onClick="{{ stop }}" style="background: #fdfdfc; border: 3px solid #1c1c1a; border-radius: 24px; box-shadow: 6px 8px 0 rgba(28,28,26,.16); padding: 30px 38px 28px; width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+        <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 25px;">Cartão de memória</div>
+        <div style="font-size: 18px; color: #9a9a92;">{{ cardState }}</div>
+
+        <div style="perspective: 900px; width: 300px; height: 240px; display: flex; align-items: center; justify-content: center; margin-top: 6px;">
+          <div style="animation: mc-float 4.5s ease-in-out infinite;">
+            <div style="width: 260px; height: 180px; position: relative; transform-style: preserve-3d; animation: mc-spin 14s linear infinite;">
+              <div style="{{ mc.front }}">
+                <div style="position: absolute; top: 0; left: 22px; width: 90px; height: 13px; background: #1c1c1a; border-radius: 0 0 7px 7px;"></div>
+                <div style="position: absolute; inset: 26px 22px 22px; border: 2.5px dashed #d6d6cf; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 8px;">
+                  <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 19px; color: #1c1c1a; word-break: break-all; line-height: 1.25;">{{ mc.title }}</div>
+                  <div style="font-size: 15px; color: #9a9a92;">{{ mc.sub }}</div>
+                </div>
+              </div>
+              <div style="{{ mc.back }}">
+                <div style="position: absolute; inset: 30px 34px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                  <sc-for list="{{ mc.pins }}" as="pin" hint-placeholder-count="8">
+                    <div style="border: 2px solid #d6d6cf; border-radius: 5px;"></div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="{{ mc.right }}"></div>
+              <div style="{{ mc.left }}"></div>
+              <div style="{{ mc.top }}"></div>
+              <div style="{{ mc.bottom }}"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="width: 170px; height: 16px; border-radius: 50%; background: #1c1c1a; animation: mc-shadow 4.5s ease-in-out infinite; margin: -14px 0 16px;"></div>
+
+        <input type="file" accept=".json,application/json" ref="{{ fileRef }}" onChange="{{ importFile }}" style="display: none;" />
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+          <button onClick="{{ cardAction }}" style="border: 2.5px solid #1c1c1a; background: #fff; border-radius: 12px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 11px 22px; font-size: 19px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;">{{ cardCta }}</button>
+          <sc-if value="{{ cardEject }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ ejectCard }}" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 11px 20px; font-size: 19px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #ef4444; color: #ef4444;">Ejetar</button>
+          </sc-if>
+          <button onClick="{{ closeCard }}" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 11px 20px; font-size: 19px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #1c1c1a; color: #1c1c1a;">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
 
   <button onClick="{{ openCoffee }}" style="position: fixed; bottom: 22px; right: 24px; display: flex; align-items: center; gap: 10px; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 999px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 9px 20px 9px 16px; font-family: 'Architects Daughter', cursive; font-size: 18px; color: #1c1c1a; cursor: pointer;" style-hover="background: #fff8e6; border-color: #d9a53b; color: #8a5a10;">
     <span style="font-size: 19px;">☕</span>
@@ -292,7 +337,7 @@ class Component extends DCLogic {
 
   async cardClick() {
     const st = this.state.card;
-    if (st === 'unsupported') { this.exportJson(); return; }
+    if (st === 'unsupported') { if (this._fileRef && this._fileRef.current) this._fileRef.current.click(); return; }
     if (st === 'locked') {
       const p = await this._handle.requestPermission({ mode: 'readwrite' });
       if (p === 'granted') { this.setState({ card: 'linked' }); this.readCard(); }
@@ -306,7 +351,7 @@ class Component extends DCLogic {
       });
       this._handle = h;
       await this.idbSet(h);
-      this.setState({ card: 'linked', cardName: h.name }, () => this.readCard());
+      this.setState({ card: 'linked', cardName: h.name, saved: Date.now() }, () => this.readCard());
     } catch (e) {}
   }
 
@@ -316,13 +361,47 @@ class Component extends DCLogic {
     this.setState({ card: 'none', cardName: '' });
   }
 
+  importFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    file.text().then(txt => {
+      try {
+        const d = JSON.parse(txt);
+        if (d && d.data) this.setState({ data: d.data, cardName: file.name }, () => {
+          try { localStorage.setItem(KEY, JSON.stringify({ data: this.state.data })); } catch (err) {}
+        });
+      } catch (err) { console.warn(err); }
+    });
+    e.target.value = '';
+  }
+
   exportJson() {
     const url = URL.createObjectURL(new Blob([JSON.stringify({ data: this.state.data }, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'checklist.json';
+    a.download = this.state.cardName || 'justcheck.json';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+
+  mcFaces(card) {
+    const W = 260, H = 180, D = 26;
+    const edge = card === 'linked' ? '#5fd08a' : card === 'locked' ? '#f3c969' : (card === 'unsupported' && this.state.cardName) ? '#93c5fd' : '#efefe9';
+    const face = 'position:absolute;border:2.5px solid #1c1c1a;border-radius:14px;background:#fff;box-sizing:border-box';
+    const side = 'position:absolute;border:2.5px solid #1c1c1a;box-sizing:border-box;background:' + edge;
+    return {
+      title: (card === 'linked' || card === 'locked') ? (this.state.cardName || 'checklist.json')
+        : card === 'unsupported' ? (this.state.cardName || 'slot vazio') : 'vazio',
+      sub: (card === 'linked' || (card === 'unsupported' && this.state.cardName)) ? Object.keys(this.state.data).length + ' dias salvos'
+        : card === 'unsupported' ? 'insira um cartão .json' : 'insira um arquivo',
+      pins: [1, 2, 3, 4, 5, 6, 7, 8],
+      front: face + ';inset:0;transform:translateZ(' + D / 2 + 'px)',
+      back: face + ';inset:0;transform:rotateY(180deg) translateZ(' + D / 2 + 'px)',
+      right: side + ';top:0;left:' + (W - D) / 2 + 'px;width:' + D + 'px;height:' + H + 'px;border-radius:8px;transform:rotateY(90deg) translateZ(' + W / 2 + 'px)',
+      left: side + ';top:0;left:' + (W - D) / 2 + 'px;width:' + D + 'px;height:' + H + 'px;border-radius:8px;transform:rotateY(-90deg) translateZ(' + W / 2 + 'px)',
+      top: side + ';left:0;top:' + (H - D) / 2 + 'px;width:' + W + 'px;height:' + D + 'px;border-radius:8px;transform:rotateX(90deg) translateZ(' + H / 2 + 'px)',
+      bottom: side + ';left:0;top:' + (H - D) / 2 + 'px;width:' + W + 'px;height:' + D + 'px;border-radius:8px;transform:rotateX(-90deg) translateZ(' + H / 2 + 'px)'
+    };
   }
 
   pixCode() {
@@ -385,10 +464,23 @@ class Component extends DCLogic {
     return {
       cardLabel: card === 'linked' ? (this.state.cardName || 'checklist.json')
         : card === 'locked' ? 'Reconectar cartão de memória'
-        : card === 'unsupported' ? 'Baixar backup' : 'Cartão de memória',
+        : card === 'unsupported' ? (this.state.cardName || 'Cartão de memória') : 'Cartão de memória',
       cardHint: card === 'linked' ? 'salvando no arquivo' : card === 'unsupported' ? 'salvo neste navegador' : '',
-      cardTitle: card === 'unsupported' ? 'Seu navegador não permite gravar em arquivo — baixe um backup JSON' : 'Escolha um arquivo .json como cartão de memória — o app grava nele automaticamente',
+      cardTitle: card === 'unsupported' ? 'Insira um cartão .json para carregar, ou ejete para levar seu save' : 'Escolha um arquivo .json como cartão de memória — o app grava nele automaticamente',
       cardLinked: card === 'linked' || card === 'locked',
+      cardEject: card === 'linked' || card === 'locked' || card === 'unsupported',
+      ejectCard: () => card === 'unsupported' ? this.exportJson() : this.unlinkCard(),
+      fileRef: this._fileRef || (this._fileRef = React.createRef()),
+      importFile: e => this.importFile(e),
+      cardCta: card === 'linked' ? 'Gravar agora'
+        : card === 'locked' ? 'Reconectar' : 'Inserir cartão',
+      cardState: card === 'linked' ? 'gravando automaticamente'
+        : card === 'locked' ? 'precisa de permissão'
+        : card === 'unsupported' ? (this.state.cardName ? 'cartão carregado — ejete para levar' : 'insira um cartão para carregar seu save') : 'slot vazio',
+      cardOpen: !!this.state.cardOpen,
+      openCard: () => this.setState({ cardOpen: true }),
+      closeCard: () => this.setState({ cardOpen: false }),
+      mc: this.mcFaces(card),
       cardAction: () => this.cardClick(),
       unlinkCard: () => this.unlinkCard(),
       coffeeOpen: !!this.state.coffeeOpen,

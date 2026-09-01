@@ -20,6 +20,8 @@
   input, button, textarea { font-family: inherit; }
   input:focus, textarea:focus { outline: none; }
   ::placeholder { color: #c9c9c4; }
+  @keyframes broom-sweep { 0% { left: -220px; transform: translateY(-50%) rotate(-14deg); } 20% { transform: translateY(-50%) rotate(10deg); } 40% { transform: translateY(-50%) rotate(-12deg); } 60% { transform: translateY(-50%) rotate(10deg); } 80% { transform: translateY(-50%) rotate(-12deg); } 100% { left: 104%; transform: translateY(-50%) rotate(8deg); } }
+  @keyframes cheer-pop { 0% { opacity: 0; transform: rotate(-4deg) scale(.4); } 12% { opacity: 1; transform: rotate(-4deg) scale(1.12); } 22% { transform: rotate(-4deg) scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: rotate(-4deg) scale(1) translateY(-14px); } }
   @keyframes mc-spin { from { transform: rotateX(-14deg) rotateY(0deg); } to { transform: rotateX(-14deg) rotateY(360deg); } }
   @keyframes mc-float { 0%, 100% { transform: translateY(-6px); } 50% { transform: translateY(6px); } }
   @keyframes mc-shadow { 0%, 100% { transform: scaleX(.92); opacity: .16; } 50% { transform: scaleX(1.04); opacity: .1; } }
@@ -62,8 +64,9 @@
         <span>{{ dayLabel }}</span>
       </button>
 
-      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 56px;">
-        <div style="flex: 1 1 620px; min-width: 280px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 56px;">
+        <div style="min-width: 0; display: flex; flex-direction: column; gap: 14px; position: relative;">
+
           <sc-for list="{{ items }}" as="item" hint-placeholder-count="4">
             <div style="display: flex; align-items: center; gap: 20px; padding: 4px 2px;">
               <button onClick="{{ item.toggle }}" aria-label="marcar" style="{{ item.boxStyle }}"><span style="{{ item.checkStyle }}">✓</span></button>
@@ -72,14 +75,28 @@
             </div>
           </sc-for>
 
-          <button onClick="{{ addItem }}" style="align-self: flex-start; margin-top: 10px; display: flex; align-items: center; gap: 16px; border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 14px; padding: 14px 26px 14px 18px; font-size: 21px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #93c5fd; color: #3b82f6;">
-            <span style="font-size: 28px; line-height: 1;">+</span>
-            <span>Novo item</span>
-          </button>
+          <div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px;">
+            <button onClick="{{ addItem }}" style="display: flex; align-items: center; gap: 16px; border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 14px; padding: 14px 26px 14px 18px; font-size: 21px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #93c5fd; color: #3b82f6;">
+              <span style="font-size: 28px; line-height: 1;">+</span>
+              <span>Novo item</span>
+            </button>
+            <sc-if value="{{ hasDone }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ sweep }}" style="display: flex; align-items: center; gap: 12px; border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 14px; padding: 14px 22px 14px 18px; font-size: 21px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #f3c969; color: #b8860b;">
+                <span style="font-size: 24px; line-height: 1;">🧹</span>
+                <span>Limpar tudo</span>
+              </button>
+            </sc-if>
+          </div>
         </div>
 
-        <div style="flex: 0 1 auto; display: flex; justify-content: center; margin: 0 auto;">{{ ring }}</div>
+        <div style="display: flex; justify-content: center;">{{ ring }}</div>
       </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ cheerOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 60;">
+      <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 64px; color: #1c1c1a; animation: cheer-pop 1.7s ease forwards; text-shadow: 3px 4px 0 rgba(95,208,138,.4); text-align: center; padding: 0 24px;">{{ cheer }}</div>
     </div>
   </sc-if>
 
@@ -96,16 +113,62 @@
       <div onClick="{{ stop }}" style="background: #fdfdfc; border: 3px solid #1c1c1a; border-radius: 24px; box-shadow: 6px 8px 0 rgba(28,28,26,.16); padding: 30px 38px 28px; width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; gap: 6px;">
         <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 25px;">Cartão de memória</div>
         <div style="font-size: 18px; color: #9a9a92;">{{ cardState }}</div>
+        <sc-if value="{{ notDrawing }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+            <input value="{{ cardLabelValue }}" onChange="{{ onCardLabel }}" maxLength="18" placeholder="dê um nome ao cartão…" style="border: none; border-bottom: 2.5px dashed #d6d6cf; background: transparent; text-align: center; font-family: 'Gloria Hallelujah', cursive; font-size: 21px; color: #1c1c1a; padding: 2px 8px 6px; width: 200px;" />
+            <button onClick="{{ startDraw }}" title="personalizar o cartão" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; width: 44px; height: 44px; font-size: 20px; cursor: pointer; color: #9a9a92;" style-hover="border-color: #3b82f6;">🖌</button>
+            <sc-if value="{{ hasPhoto }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ removePhoto }}" title="tirar foto/desenho" style="border: none; background: transparent; color: #d8d8d2; font-size: 22px; cursor: pointer; padding: 4px;" style-hover="color: #ef4444;">×</button>
+            </sc-if>
+          </div>
+        </sc-if>
+        <input type="file" accept="image/*" ref="{{ photoRef }}" onChange="{{ onPhoto }}" style="display: none;" />
 
+        <sc-if value="{{ drawing }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 10px;">
+            <div style="display: flex; gap: 8px;">
+              <sc-for list="{{ faces }}" as="f" hint-placeholder-count="4">
+                <button onClick="{{ f.pick }}" style="{{ f.style }}">{{ f.name }}</button>
+              </sc-for>
+            </div>
+            <div style="position: relative; border: 2.5px solid #1c1c1a; border-radius: 14px; box-shadow: 3px 4px 0 rgba(28,28,26,.14); overflow: hidden; background: #fff;">
+              <sc-if value="{{ editFront }}" hint-placeholder-val="{{ true }}">
+                <div style="position: absolute; top: 0; left: 26px; width: 100px; height: 14px; background: #1c1c1a; border-radius: 0 0 7px 7px; pointer-events: none;"></div>
+              </sc-if>
+              <canvas ref="{{ canvasRef }}" width="{{ drawW }}" height="{{ drawH }}" onPointerDown="{{ penDown }}" onPointerMove="{{ penMove }}" onPointerUp="{{ penUp }}" onPointerLeave="{{ penUp }}" style="{{ drawStyle }}"></canvas>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <sc-for list="{{ pens }}" as="pen" hint-placeholder-count="6">
+                <button onClick="{{ pen.pick }}" title="{{ pen.name }}" style="{{ pen.style }}">{{ pen.icon }}</button>
+              </sc-for>
+              <button onClick="{{ clearArt }}" title="apagar esta face" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 8px 14px; font-size: 17px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #ef4444; color: #ef4444;">limpar</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 400px;">
+              <sc-for list="{{ stickers }}" as="st" hint-placeholder-count="8">
+                <button onClick="{{ st.pick }}" title="figurinha" style="{{ st.style }}">{{ st.icon }}</button>
+              </sc-for>
+              <button onClick="{{ pickPhoto }}" title="colar foto (toque no cartão para posicionar)" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; width: 40px; height: 40px; font-size: 18px; cursor: pointer; color: #9a9a92;" style-hover="border-color: #3b82f6;">📷</button>
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <button onClick="{{ saveArt }}" style="border: 2.5px solid #1c1c1a; background: #fff; border-radius: 12px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 10px 22px; font-size: 19px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eefaf1; border-color: #5fd08a;">Salvar desenho</button>
+              <button onClick="{{ cancelDraw }}" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 10px 18px; font-size: 19px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #1c1c1a; color: #1c1c1a;">Cancelar</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ notDrawing }}" hint-placeholder-val="{{ true }}">
         <div style="perspective: 900px; width: 300px; height: 240px; display: flex; align-items: center; justify-content: center; margin-top: 6px;">
           <div style="animation: mc-float 4.5s ease-in-out infinite;">
             <div style="width: 260px; height: 180px; position: relative; transform-style: preserve-3d; animation: mc-spin 14s linear infinite;">
               <div style="{{ mc.front }}">
+                {{ mc.photoEl }}
                 <div style="position: absolute; top: 0; left: 22px; width: 90px; height: 13px; background: #1c1c1a; border-radius: 0 0 7px 7px;"></div>
-                <div style="position: absolute; inset: 26px 22px 22px; border: 2.5px dashed #d6d6cf; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 8px;">
-                  <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 19px; color: #1c1c1a; word-break: break-all; line-height: 1.25;">{{ mc.title }}</div>
-                  <div style="font-size: 15px; color: #9a9a92;">{{ mc.sub }}</div>
-                </div>
+                <sc-if value="{{ mc.noFront }}" hint-placeholder-val="{{ true }}">
+                  <div style="position: absolute; inset: 26px 22px 22px; border: 2.5px dashed #d6d6cf; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; text-align: center; padding: 8px;">
+                    <div style="font-family: 'Gloria Hallelujah', cursive; font-size: 19px; color: #1c1c1a; word-break: break-all; line-height: 1.25;">{{ mc.title }}</div>
+                    <div style="font-size: 15px; color: #9a9a92;">{{ mc.sub }}</div>
+                  </div>
+                </sc-if>
               </div>
               <div style="{{ mc.back }}">
                 <div style="position: absolute; inset: 30px 34px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
@@ -113,33 +176,35 @@
                     <div style="border: 2px solid #d6d6cf; border-radius: 5px;"></div>
                   </sc-for>
                 </div>
+                {{ mc.backEl }}
               </div>
-              <div style="{{ mc.right }}"></div>
-              <div style="{{ mc.left }}"></div>
-              <div style="{{ mc.top }}"></div>
-              <div style="{{ mc.bottom }}"></div>
+              {{ mc.rightEl }}
+              {{ mc.leftEl }}
+              {{ mc.topEl }}
+              {{ mc.bottomEl }}
             </div>
           </div>
         </div>
 
         <div style="width: 170px; height: 16px; border-radius: 50%; background: #1c1c1a; animation: mc-shadow 4.5s ease-in-out infinite; margin: -14px 0 16px;"></div>
+        </sc-if>
 
         <input type="file" accept=".json,application/json" ref="{{ fileRef }}" onChange="{{ importFile }}" style="display: none;" />
+        <sc-if value="{{ notDrawing }}" hint-placeholder-val="{{ true }}">
         <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
           <button onClick="{{ cardAction }}" style="border: 2.5px solid #1c1c1a; background: #fff; border-radius: 12px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 11px 22px; font-size: 19px; color: #1c1c1a; cursor: pointer;" style-hover="background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;">{{ cardCta }}</button>
+          <sc-if value="{{ cardHasInsert }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ insertExisting }}" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 11px 20px; font-size: 19px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #3b82f6; color: #1d4ed8;">Inserir existente</button>
+          </sc-if>
           <sc-if value="{{ cardEject }}" hint-placeholder-val="{{ false }}">
             <button onClick="{{ ejectCard }}" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 11px 20px; font-size: 19px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #ef4444; color: #ef4444;">Ejetar</button>
           </sc-if>
           <button onClick="{{ closeCard }}" style="border: 2.5px dashed #d6d6cf; background: transparent; border-radius: 12px; padding: 11px 20px; font-size: 19px; color: #9a9a92; cursor: pointer;" style-hover="border-color: #1c1c1a; color: #1c1c1a;">Fechar</button>
         </div>
+        </sc-if>
       </div>
     </div>
   </sc-if>
-
-  <button onClick="{{ openCoffee }}" style="position: fixed; bottom: 22px; right: 24px; display: flex; align-items: center; gap: 10px; border: 2.5px solid #1c1c1a; background: #fff; border-radius: 999px; box-shadow: 2px 3px 0 rgba(28,28,26,.14); padding: 9px 20px 9px 16px; font-family: 'Architects Daughter', cursive; font-size: 18px; color: #1c1c1a; cursor: pointer;" style-hover="background: #fff8e6; border-color: #d9a53b; color: #8a5a10;">
-    <span style="font-size: 19px;">☕</span>
-    <span>Pay my coffee</span>
-  </button>
 
   <sc-if value="{{ coffeeOpen }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ closeCoffee }}" style="position: fixed; inset: 0; background: rgba(28,28,26,.28); display: flex; align-items: center; justify-content: center; padding: 24px;">
@@ -159,17 +224,17 @@
 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pixKey&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;seu-email@exemplo.com&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pix&quot;},&quot;pixName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;CAFE&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pix&quot;},&quot;pixCity&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;SAO PAULO&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pix&quot;},&quot;pixAmount&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Pix&quot;}}">
-const KEY = 'whiteboard-checklist-v2';
+const KEY = 'whiteboard-checklist-v3';
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const pad = n => String(n).padStart(2, '0');
 const keyOf = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 
 const SEED = [
-  { id: 1, text: 'Limitar histórico para o cliente', done: false },
-  { id: 2, text: 'Visual de PDF do log, cada etapa com rubrica de quem fez', done: false },
-  { id: 3, text: 'Bug do IFRAME e ajustes visuais', done: true },
-  { id: 4, text: 'Comportamento dos campos obrigatórios no EMBED', done: true },
-  { id: 5, text: 'Correção na Embed Route', done: true }
+  { id: 1, text: 'Beber água', done: true },
+  { id: 2, text: 'Responder e-mails', done: true },
+  { id: 3, text: 'Reunião das 10h', done: false },
+  { id: 4, text: 'Fazer exercício', done: false },
+  { id: 5, text: 'Ler 20 páginas', done: false }
 ];
 
 class Component extends DCLogic {
@@ -179,7 +244,7 @@ class Component extends DCLogic {
     const today = keyOf(now);
     const data = {};
     data[today] = SEED;
-    this.state = { view: 'calendar', day: today, y: now.getFullYear(), m: now.getMonth(), data };
+    this.state = { view: 'day', day: today, y: now.getFullYear(), m: now.getMonth(), data };
   }
 
   componentDidMount() {
@@ -189,6 +254,13 @@ class Component extends DCLogic {
         const d = JSON.parse(raw);
         if (d && d.data) this.setState({ data: d.data });
       }
+      const lbl = localStorage.getItem(KEY + '-label');
+      if (lbl) this.setState({ cardLabel: lbl });
+      let art = null;
+      try { art = JSON.parse(localStorage.getItem(KEY + '-art') || 'null'); } catch (err) {}
+      const ph = localStorage.getItem(KEY + '-photo');
+      if (!art && ph) art = { front: ph };
+      if (art) this.setState({ cardArt: art });
     } catch (e) {}
     setTimeout(() => this.autosize(), 60);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.autosize());
@@ -197,7 +269,20 @@ class Component extends DCLogic {
   }
 
   componentWillUnmount() { window.removeEventListener('resize', this._rs); }
-  componentDidUpdate() { this.autosize(); }
+  componentDidUpdate() {
+    this.autosize();
+    if (this.state.drawing) {
+      const face = this.state.editFace || 'front';
+      if (!this._cvReady || this._cvFace !== face) {
+        this._cvReady = true;
+        this._cvFace = face;
+        this.initCanvas();
+      }
+    } else {
+      this._cvReady = false;
+      this._cvFace = null;
+    }
+  }
 
   autosize() {
     document.querySelectorAll('textarea').forEach(t => {
@@ -316,7 +401,7 @@ class Component extends DCLogic {
       const txt = await file.text();
       if (txt.trim()) {
         const d = JSON.parse(txt);
-        if (d && d.data) { this.setState({ data: d.data }); return; }
+        if (d && d.data) { this.setState({ data: d.data, cardLabel: d.label || this.state.cardLabel, cardArt: d.art || (d.photo ? { front: d.photo } : this.state.cardArt) }); return; }
       }
       this.writeCard();
     } catch (e) { console.warn(e); }
@@ -328,7 +413,7 @@ class Component extends DCLogic {
     this._wt = setTimeout(async () => {
       try {
         const w = await this._handle.createWritable();
-        await w.write(JSON.stringify({ data: this.state.data }, null, 2));
+        await w.write(JSON.stringify({ label: this.state.cardLabel || '', art: this.state.cardArt || null, data: this.state.data }, null, 2));
         await w.close();
         this.setState({ saved: Date.now() });
       } catch (e) { console.warn(e); }
@@ -337,28 +422,197 @@ class Component extends DCLogic {
 
   async cardClick() {
     const st = this.state.card;
-    if (st === 'unsupported') { if (this._fileRef && this._fileRef.current) this._fileRef.current.click(); return; }
+    if (st === 'unsupported') { this.cardRain(); this.exportJson(); this.setState({ cardName: this.state.cardName || 'justcheck.json' }); return; }
     if (st === 'locked') {
       const p = await this._handle.requestPermission({ mode: 'readwrite' });
       if (p === 'granted') { this.setState({ card: 'linked' }); this.readCard(); }
       return;
     }
     if (st === 'linked') { this.writeCard(); return; }
+    // criar cartão novo: cria o arquivo e já grava o estado atual
     try {
       const h = await window.showSaveFilePicker({
-        suggestedName: 'checklist.json',
-        types: [{ description: 'Checklist', accept: { 'application/json': ['.json'] } }]
+        suggestedName: 'justcheck.json',
+        types: [{ description: 'JustCheck', accept: { 'application/json': ['.json'] } }]
       });
       this._handle = h;
       await this.idbSet(h);
-      this.setState({ card: 'linked', cardName: h.name, saved: Date.now() }, () => this.readCard());
+      this.cardRain();
+      this.setState({ card: 'linked', cardName: h.name, saved: Date.now() }, () => this.writeCard());
+    } catch (e) {
+      // iframe/preview bloqueia o seletor: cai no modo download
+      if (e && (e.name === 'SecurityError' || e.name === 'NotAllowedError')) {
+        this.cardRain();
+        this.exportJson();
+      }
+    }
+  }
+
+  cardRain() {
+    const cv = document.createElement('canvas');
+    cv.width = innerWidth; cv.height = innerHeight;
+    cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:70';
+    document.body.appendChild(cv);
+    const x = cv.getContext('2d');
+    const colors = ['#5fd08a', '#93c5fd', '#f3c969'];
+    const ps = Array.from({ length: 40 }, () => ({
+      x: Math.random() * cv.width, y: -80 - Math.random() * 300,
+      vx: (Math.random() - .5) * 2.6, vy: 3 + Math.random() * 4,
+      r: (Math.random() - .5) * .8, vr: (Math.random() - .5) * .18,
+      w: 34 + Math.random() * 30,
+      c: colors[Math.floor(Math.random() * colors.length)]
+    }));
+    const t0 = performance.now();
+    const step = t => {
+      x.clearRect(0, 0, cv.width, cv.height);
+      ps.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += .05; p.r += p.vr;
+        const w = p.w, h = w * 0.7;
+        x.save(); x.translate(p.x, p.y); x.rotate(p.r);
+        // corpo do memory card
+        x.fillStyle = '#fff'; x.strokeStyle = '#1c1c1a'; x.lineWidth = 2;
+        x.beginPath();
+        if (x.roundRect) x.roundRect(-w / 2, -h / 2, w, h, 5); else x.rect(-w / 2, -h / 2, w, h);
+        x.fill(); x.stroke();
+        // trava do conector (aba preta no topo, como no cartão 3D)
+        x.fillStyle = '#1c1c1a';
+        x.beginPath();
+        if (x.roundRect) x.roundRect(-w / 2 + w * 0.12, -h / 2, w * 0.36, h * 0.16, [0, 0, 3, 3]); else x.rect(-w / 2 + w * 0.12, -h / 2, w * 0.36, h * 0.16);
+        x.fill();
+        // etiqueta colorida central
+        x.fillStyle = p.c;
+        x.strokeStyle = '#1c1c1a'; x.lineWidth = 1.4;
+        x.beginPath();
+        if (x.roundRect) x.roundRect(-w * 0.3, -h * 0.12, w * 0.6, h * 0.44, 3); else x.rect(-w * 0.3, -h * 0.12, w * 0.6, h * 0.44);
+        x.fill(); x.stroke();
+        x.restore();
+      });
+      if (t - t0 < 2200) requestAnimationFrame(step);
+      else cv.remove();
+    };
+    requestAnimationFrame(step);
+  }
+
+  async insertExisting() {
+    if (!window.showOpenFilePicker) {
+      if (this._fileRef && this._fileRef.current) this._fileRef.current.click();
+      return;
+    }
+    try {
+      const [h] = await window.showOpenFilePicker({
+        types: [{ description: 'JustCheck', accept: { 'application/json': ['.json'] } }]
+      });
+      this._handle = h;
+      await this.idbSet(h);
+      this.setState({ card: 'linked', cardName: h.name }, () => this.readCard());
     } catch (e) {}
   }
 
   async unlinkCard() {
     this._handle = null;
     await this.idbSet(null);
-    this.setState({ card: 'none', cardName: '' });
+    this.setState({ card: window.showSaveFilePicker ? 'none' : 'unsupported', cardName: '', cardLabel: '', cardArt: null });
+    try { localStorage.removeItem(KEY + '-label'); localStorage.removeItem(KEY + '-photo'); localStorage.removeItem(KEY + '-art'); } catch (e) {}
+  }
+
+  art() { return this.state.cardArt || {}; }
+
+  initCanvas() {
+    const cv = this._canvasRef && this._canvasRef.current;
+    if (!cv) return;
+    const x = cv.getContext('2d');
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, cv.width, cv.height);
+    const buf = this._artBuf && this._artBuf[this.state.editFace];
+    if (buf) {
+      const img = new Image();
+      img.onload = () => x.drawImage(img, 0, 0, cv.width, cv.height);
+      img.src = buf;
+    }
+  }
+
+  stashFace() {
+    const cv = this._canvasRef && this._canvasRef.current;
+    if (cv && this._dirtyFace) this._artBuf[this.state.editFace] = cv.toDataURL('image/jpeg', 0.85);
+    this._dirtyFace = false;
+  }
+
+  switchFace(f) {
+    this.stashFace();
+    this.setState({ editFace: f });
+  }
+
+  penXY(e) {
+    const cv = this._canvasRef.current;
+    const r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height };
+  }
+
+  penStroke(a, b) {
+    const cv = this._canvasRef.current;
+    const x = cv.getContext('2d');
+    const pen = this.state.pen || '#1c1c1a';
+    x.strokeStyle = pen === 'eraser' ? '#fff' : pen;
+    x.lineWidth = pen === 'eraser' ? 22 : 5;
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.stroke();
+    this._dirtyFace = true;
+  }
+
+  stamp(p) {
+    const cv = this._canvasRef.current;
+    const x = cv.getContext('2d');
+    const pen = this.state.pen || '';
+    if (pen.indexOf('sticker:') === 0) {
+      const s = Math.min(cv.width, cv.height) < 100 ? 26 : 46;
+      x.font = s + 'px serif';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(pen.slice(8), p.x, p.y);
+      this._dirtyFace = true;
+      return true;
+    }
+    if (pen === 'photo' && this._stampImg) {
+      const img = this._stampImg;
+      const max = Math.min(150, Math.min(cv.width, cv.height) * 0.92);
+      const sc = Math.min(max / img.width, max / img.height);
+      const w = img.width * sc, h = img.height * sc;
+      x.drawImage(img, p.x - w / 2, p.y - h / 2, w, h);
+      this._dirtyFace = true;
+      return true;
+    }
+    return false;
+  }
+
+  setPhoto(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const S = 256;
+      const cv = document.createElement('canvas');
+      const sc = Math.min(1, S / Math.max(img.width, img.height));
+      cv.width = img.width * sc; cv.height = img.height * sc;
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      const small = new Image();
+      small.onload = () => { this._stampImg = small; this.setState({ pen: 'photo' }); };
+      small.src = cv.toDataURL('image/jpeg', 0.82);
+    };
+    img.src = url;
+  }
+
+  persistArt(art) {
+    const clean = art && (art.front || art.back || art.top || art.bottom || art.left || art.right) ? art : null;
+    this.setState({ cardArt: clean, drawing: false }, () => {
+      try {
+        if (clean) localStorage.setItem(KEY + '-art', JSON.stringify(clean));
+        else localStorage.removeItem(KEY + '-art');
+        localStorage.removeItem(KEY + '-photo');
+      } catch (err) {}
+      this.writeCard();
+    });
   }
 
   importFile(e) {
@@ -367,7 +621,7 @@ class Component extends DCLogic {
     file.text().then(txt => {
       try {
         const d = JSON.parse(txt);
-        if (d && d.data) this.setState({ data: d.data, cardName: file.name }, () => {
+        if (d && d.data) this.setState({ data: d.data, cardName: file.name, cardLabel: d.label || this.state.cardLabel, cardArt: d.art || (d.photo ? { front: d.photo } : this.state.cardArt) }, () => {
           try { localStorage.setItem(KEY, JSON.stringify({ data: this.state.data })); } catch (err) {}
         });
       } catch (err) { console.warn(err); }
@@ -376,7 +630,7 @@ class Component extends DCLogic {
   }
 
   exportJson() {
-    const url = URL.createObjectURL(new Blob([JSON.stringify({ data: this.state.data }, null, 2)], { type: 'application/json' }));
+    const url = URL.createObjectURL(new Blob([JSON.stringify({ label: this.state.cardLabel || '', art: this.state.cardArt || null, data: this.state.data }, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = this.state.cardName || 'justcheck.json';
@@ -384,23 +638,156 @@ class Component extends DCLogic {
     setTimeout(() => URL.revokeObjectURL(url), 3000);
   }
 
+  textPx(txt) {
+    if (!this._mc) this._mc = document.createElement('canvas').getContext('2d');
+    this._mc.font = "23px 'Architects Daughter', cursive";
+    return Math.ceil(this._mc.measureText(txt || '').width) + 6;
+  }
+
+  sweep() {
+    if (this._sweeping) return;
+    const items = this.itemsFor(this.state.day);
+    const doneIds = items.filter(i => i.done).map(i => i.id);
+    if (!doneIds.length) return;
+    this._sweeping = true;
+    this.broomRain();
+    doneIds.forEach((id, k) => setTimeout(() => {
+      const cur = this.itemsFor(this.state.day);
+      this.saveData(cur.map(x => x.id === id ? Object.assign({}, x, { done: false }) : x));
+    }, 300 + k * 120));
+    setTimeout(() => { this._sweeping = false; }, Math.max(1900, 300 + doneIds.length * 120 + 400));
+  }
+
+  broomRain() {
+    const cv = document.createElement('canvas');
+    cv.width = innerWidth; cv.height = innerHeight;
+    cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:55';
+    document.body.appendChild(cv);
+    const x = cv.getContext('2d');
+    const ps = Array.from({ length: 46 }, () => ({
+      x: Math.random() * cv.width, y: -60 - Math.random() * 260,
+      vx: (Math.random() - .5) * 2.4, vy: 3 + Math.random() * 4,
+      r: Math.random() * Math.PI * 2, vr: (Math.random() - .5) * .3,
+      s: 26 + Math.random() * 34
+    }));
+    const t0 = performance.now();
+    const step = t => {
+      x.clearRect(0, 0, cv.width, cv.height);
+      ps.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += .05; p.r += p.vr;
+        x.save(); x.translate(p.x, p.y); x.rotate(p.r);
+        x.font = p.s + 'px serif';
+        x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillText('🧹', 0, 0);
+        x.restore();
+      });
+      if (t - t0 < 2200) requestAnimationFrame(step);
+      else cv.remove();
+    };
+    requestAnimationFrame(step);
+  }
+
+  celebrate() {
+    if (this._cel) return;
+    this._cel = true;
+    const phrases = ['zerou o dia!', 'mandou bem!', 'que brabo!', 'dia fechado!', 'GG!', 'sem pendência!'];
+    this.setState({ cheer: phrases[Math.floor(Math.random() * phrases.length)] });
+    setTimeout(() => { this.setState({ cheer: null }); this._cel = false; }, 1800);
+    this.confetti();
+    this.tada();
+  }
+
+  confetti() {
+    const cv = document.createElement('canvas');
+    cv.width = innerWidth; cv.height = innerHeight;
+    cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:55';
+    document.body.appendChild(cv);
+    const x = cv.getContext('2d');
+    const colors = ['#5fd08a', '#93c5fd', '#f3c969', '#1c1c1a'];
+    const ps = Array.from({ length: 90 }, () => ({
+      x: Math.random() * cv.width, y: -20 - Math.random() * 140,
+      vx: (Math.random() - .5) * 3, vy: 2.5 + Math.random() * 3.5,
+      r: Math.random() * Math.PI, vr: (Math.random() - .5) * .25,
+      w: 7 + Math.random() * 7, h: 4 + Math.random() * 5,
+      c: colors[Math.floor(Math.random() * colors.length)]
+    }));
+    const t0 = performance.now();
+    const step = t => {
+      x.clearRect(0, 0, cv.width, cv.height);
+      ps.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += .06; p.r += p.vr;
+        x.save(); x.translate(p.x, p.y); x.rotate(p.r);
+        x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        x.restore();
+      });
+      if (t - t0 < 2000) requestAnimationFrame(step);
+      else cv.remove();
+    };
+    requestAnimationFrame(step);
+  }
+
+  tada() {
+    try {
+      const A = window.AudioContext || window.webkitAudioContext;
+      const ctx = this._ac || (this._ac = new A());
+      const t = ctx.currentTime;
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = f;
+        o.connect(g); g.connect(ctx.destination);
+        const st = t + i * 0.09;
+        g.gain.setValueAtTime(0.0001, st);
+        g.gain.exponentialRampToValueAtTime(0.16, st + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, st + 0.5);
+        o.start(st); o.stop(st + 0.55);
+      });
+    } catch (e) {}
+  }
+
   mcFaces(card) {
     const W = 260, H = 180, D = 26;
     const edge = card === 'linked' ? '#5fd08a' : card === 'locked' ? '#f3c969' : (card === 'unsupported' && this.state.cardName) ? '#93c5fd' : '#efefe9';
     const face = 'position:absolute;border:2.5px solid #1c1c1a;border-radius:14px;background:#fff;box-sizing:border-box';
-    const side = 'position:absolute;border:2.5px solid #1c1c1a;box-sizing:border-box;background:' + edge;
+    const art = this.art();
+    const h = React.createElement;
+    const img = src => src ? h('img', { src, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : null;
+    const sideEl = (which, src) => h('div', {
+      style: {
+        position: 'absolute', left: 0, top: (H - D) / 2, width: W, height: D,
+        border: '2.5px solid #1c1c1a', borderRadius: 8, boxSizing: 'border-box',
+        background: edge, overflow: 'hidden',
+        transform: 'rotateX(' + (which === 'top' ? 90 : -90) + 'deg) translateZ(' + H / 2 + 'px)'
+      }
+    }, img(src));
+    const vSideEl = (which, src) => h('div', {
+      style: {
+        position: 'absolute', top: 0, left: (W - D) / 2, width: D, height: H,
+        border: '2.5px solid #1c1c1a', borderRadius: 8, boxSizing: 'border-box',
+        background: edge, overflow: 'hidden',
+        transform: 'rotateY(' + (which === 'right' ? 90 : -90) + 'deg) translateZ(' + W / 2 + 'px)'
+      }
+    }, img(src));
     return {
-      title: (card === 'linked' || card === 'locked') ? (this.state.cardName || 'checklist.json')
-        : card === 'unsupported' ? (this.state.cardName || 'slot vazio') : 'vazio',
-      sub: (card === 'linked' || (card === 'unsupported' && this.state.cardName)) ? Object.keys(this.state.data).length + ' dias salvos'
-        : card === 'unsupported' ? 'insira um cartão .json' : 'insira um arquivo',
+      title: art.front ? '' : (this.state.cardLabel || ((card === 'linked' || card === 'locked') ? (this.state.cardName || 'checklist.json')
+        : card === 'unsupported' ? (this.state.cardName || 'slot vazio') : 'vazio')),
+      sub: art.front ? '' : ((card === 'linked' || (card === 'unsupported' && this.state.cardName)) ? Object.keys(this.state.data).length + ' dias salvos'
+        : card === 'unsupported' ? 'insira um cartão .json' : 'crie ou insira um cartão'),
       pins: [1, 2, 3, 4, 5, 6, 7, 8],
+      noFront: !art.front,
+      photoEl: art.front ? React.createElement('img', {
+        src: art.front, alt: 'arte do cartão',
+        style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }
+      }) : null,
+      backEl: art.back ? React.createElement('img', {
+        src: art.back, alt: 'verso do cartão',
+        style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }
+      }) : null,
+      topEl: sideEl('top', art.top),
+      bottomEl: sideEl('bottom', art.bottom),
+      rightEl: vSideEl('right', art.right),
+      leftEl: vSideEl('left', art.left),
       front: face + ';inset:0;transform:translateZ(' + D / 2 + 'px)',
-      back: face + ';inset:0;transform:rotateY(180deg) translateZ(' + D / 2 + 'px)',
-      right: side + ';top:0;left:' + (W - D) / 2 + 'px;width:' + D + 'px;height:' + H + 'px;border-radius:8px;transform:rotateY(90deg) translateZ(' + W / 2 + 'px)',
-      left: side + ';top:0;left:' + (W - D) / 2 + 'px;width:' + D + 'px;height:' + H + 'px;border-radius:8px;transform:rotateY(-90deg) translateZ(' + W / 2 + 'px)',
-      top: side + ';left:0;top:' + (H - D) / 2 + 'px;width:' + W + 'px;height:' + D + 'px;border-radius:8px;transform:rotateX(90deg) translateZ(' + H / 2 + 'px)',
-      bottom: side + ';left:0;top:' + (H - D) / 2 + 'px;width:' + W + 'px;height:' + D + 'px;border-radius:8px;transform:rotateX(-90deg) translateZ(' + H / 2 + 'px)'
+      back: face + ';inset:0;overflow:hidden;transform:rotateY(180deg) translateZ(' + D / 2 + 'px)'
     };
   }
 
@@ -468,16 +855,82 @@ class Component extends DCLogic {
       cardHint: card === 'linked' ? 'salvando no arquivo' : card === 'unsupported' ? 'salvo neste navegador' : '',
       cardTitle: card === 'unsupported' ? 'Insira um cartão .json para carregar, ou ejete para levar seu save' : 'Escolha um arquivo .json como cartão de memória — o app grava nele automaticamente',
       cardLinked: card === 'linked' || card === 'locked',
-      cardEject: card === 'linked' || card === 'locked' || card === 'unsupported',
-      ejectCard: () => card === 'unsupported' ? this.exportJson() : this.unlinkCard(),
+      cardEject: card === 'linked' || card === 'locked' || (card === 'unsupported' && !!this.state.cardName),
+      ejectCard: () => { if (card === 'unsupported') this.exportJson(); this.unlinkCard(); },
       fileRef: this._fileRef || (this._fileRef = React.createRef()),
       importFile: e => this.importFile(e),
       cardCta: card === 'linked' ? 'Gravar agora'
-        : card === 'locked' ? 'Reconectar' : 'Inserir cartão',
+        : card === 'locked' ? 'Reconectar'
+        : card === 'unsupported' ? 'Criar cartão' : 'Criar cartão',
+      cardHasInsert: card === 'none' || card === 'unsupported',
+      insertExisting: () => this.insertExisting(),
       cardState: card === 'linked' ? 'gravando automaticamente'
         : card === 'locked' ? 'precisa de permissão'
-        : card === 'unsupported' ? (this.state.cardName ? 'cartão carregado — ejete para levar' : 'insira um cartão para carregar seu save') : 'slot vazio',
+        : card === 'unsupported' ? (this.state.cardName ? 'cartão carregado — ejete para levar' : 'crie um cartão ou insira um existente') : 'slot vazio — crie seu cartão',
       cardOpen: !!this.state.cardOpen,
+      cardLabelValue: this.state.cardLabel || '',
+      drawing: !!this.state.drawing,
+      notDrawing: !this.state.drawing,
+      canvasRef: this._canvasRef || (this._canvasRef = React.createRef()),
+      editFront: (this.state.editFace || 'front') === 'front',
+      drawW: (this.state.editFace === 'left' || this.state.editFace === 'right') ? 40 : 360,
+      drawH: (this.state.editFace === 'top' || this.state.editFace === 'bottom') ? 40 : 248,
+      drawStyle: 'display:block;width:' + ((this.state.editFace === 'left' || this.state.editFace === 'right') ? 40 : 360) + 'px;height:' + ((this.state.editFace === 'top' || this.state.editFace === 'bottom') ? 40 : 248) + 'px;cursor:crosshair;touch-action:none',
+      faces: [['front', 'Frente'], ['back', 'Costas'], ['top', 'Cima'], ['bottom', 'Baixo'], ['left', 'Esq'], ['right', 'Dir']].map(([id, name]) => ({
+        name,
+        pick: () => this.switchFace(id),
+        style: 'border:2.5px ' + ((this.state.editFace || 'front') === id ? 'solid #1c1c1a' : 'dashed #d6d6cf') + ';background:' + ((this.state.editFace || 'front') === id ? '#eff6ff' : 'transparent') + ';border-radius:12px;padding:7px 14px;font-size:16px;color:#1c1c1a;cursor:pointer'
+      })),
+      stickers: ['⭐', '🔥', '❤️', '😺', '🎮', '🍀', '✨', '👾', '🌈', '💀'].map(s => ({
+        icon: s,
+        pick: () => this.setState({ pen: 'sticker:' + s }),
+        style: 'border:2.5px ' + (this.state.pen === 'sticker:' + s ? 'solid #1c1c1a' : 'dashed transparent') + ';background:transparent;border-radius:10px;width:38px;height:38px;font-size:20px;cursor:pointer;padding:0'
+      })),
+      startDraw: () => {
+        this._artBuf = Object.assign({}, this.art());
+        this._dirtyFace = false;
+        this.setState({ drawing: true, pen: '#1c1c1a', editFace: 'front' });
+      },
+      cancelDraw: () => this.setState({ drawing: false }),
+      clearArt: () => {
+        const cv = this._canvasRef.current;
+        if (cv) { const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); }
+        this._artBuf[this.state.editFace || 'front'] = null;
+        this._dirtyFace = false;
+      },
+      saveArt: () => {
+        this.stashFace();
+        this.persistArt(Object.assign({}, this._artBuf));
+      },
+      penDown: e => {
+        e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId);
+        const p = this.penXY(e);
+        if (this.stamp(p)) return;
+        this._dr = p;
+        this.penStroke(p, p);
+      },
+      penMove: e => { if (this._dr) { const p = this.penXY(e); this.penStroke(this._dr, p); this._dr = p; } },
+      penUp: () => { this._dr = null; },
+      pens: ['#1c1c1a', '#3b82f6', '#5fd08a', '#f3c969', '#ef4444', 'eraser'].map(c => ({
+        name: c === 'eraser' ? 'borracha' : 'caneta',
+        icon: c === 'eraser' ? '🧽' : '',
+        pick: () => this.setState({ pen: c }),
+        style: c === 'eraser'
+          ? 'border:2.5px ' + (this.state.pen === c ? 'solid #1c1c1a' : 'dashed #d6d6cf') + ';background:transparent;border-radius:12px;width:40px;height:40px;font-size:17px;cursor:pointer'
+          : 'border:2.5px solid ' + (this.state.pen === c ? '#1c1c1a' : 'transparent') + ';background:' + c + ';border-radius:50%;width:34px;height:34px;cursor:pointer;box-shadow:1px 2px 0 rgba(28,28,26,.2)'
+      })),
+      photoRef: this._photoRef || (this._photoRef = React.createRef()),
+      pickPhoto: () => this._photoRef && this._photoRef.current && this._photoRef.current.click(),
+      hasPhoto: !!(this.art().front || this.art().back || this.art().top || this.art().bottom || this.art().left || this.art().right),
+      onPhoto: e => this.setPhoto(e),
+      removePhoto: () => this.persistArt(null),
+      onCardLabel: e => {
+        const v = e.target.value;
+        this.setState({ cardLabel: v }, () => {
+          try { localStorage.setItem(KEY + '-label', v); } catch (err) {}
+          this.writeCard();
+        });
+      },
       openCard: () => this.setState({ cardOpen: true }),
       closeCard: () => this.setState({ cardOpen: false }),
       mc: this.mcFaces(card),
@@ -495,6 +948,8 @@ class Component extends DCLogic {
         if (navigator.clipboard) navigator.clipboard.writeText(pix).then(done, done);
         else done();
       },
+      cheer: this.state.cheer,
+      cheerOn: !!this.state.cheer,
       isCalendar: view === 'calendar',
       isDay: view === 'day',
       monthLabel: MONTHS[m] + ' ' + y,
@@ -509,9 +964,15 @@ class Component extends DCLogic {
         smallText: parts[2] + '/' + parts[1] + '/' + parts[0].slice(2)
       }),
       addItem: () => this.add(null),
+      hasDone: items.some(i => i.done),
+      sweep: () => this.sweep(),
       items: items.map(it => ({
         text: it.text,
-        toggle: () => this.saveData(items.map(x => x.id === it.id ? Object.assign({}, x, { done: !x.done }) : x)),
+        toggle: () => {
+          const next = items.map(x => x.id === it.id ? Object.assign({}, x, { done: !x.done }) : x);
+          if (next.length && next.every(x => x.done) && !items.every(x => x.done)) this.celebrate();
+          this.saveData(next);
+        },
         remove: () => this.saveData(items.filter(x => x.id !== it.id)),
         onText: e => this.saveData(items.map(x => x.id === it.id ? Object.assign({}, x, { text: e.target.value }) : x)),
         onKey: e => {
@@ -533,8 +994,9 @@ class Component extends DCLogic {
           'transition:all .18s ease'
         ].join(';'),
         textStyle: [
-          "flex:1 1 auto;min-width:0;border:none;background:transparent;font-family:'Architects Daughter',cursive;font-size:23px;line-height:1.35;padding:6px 0;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word",
-          it.done ? 'color:#a3a39c;text-decoration:line-through;text-decoration-thickness:2px' : 'color:#1c1c1a'
+          "flex:1 1 auto;min-width:0;border:none;background-color:transparent;font-family:'Architects Daughter',cursive;font-size:23px;line-height:1.35;padding:6px 0;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word",
+          'background-image:linear-gradient(#a3a39c,#a3a39c);background-repeat:no-repeat;background-position:0 56%;transition:background-size .45s ease,color .3s ease',
+          it.done ? 'color:#a3a39c;background-size:min(' + this.textPx(it.text) + 'px,100%) 2.5px' : 'color:#1c1c1a;background-size:0px 2.5px'
         ].join(';')
       }))
     };
